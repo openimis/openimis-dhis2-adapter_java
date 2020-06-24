@@ -1,7 +1,6 @@
 package org.beehyv.dhis2openimis.adapter;
 
 import org.beehyv.dhis2openimis.adapter.dhis.fetch.*;
-
 import org.beehyv.dhis2openimis.adapter.openimis.APICaller;
 
 import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
@@ -40,6 +39,8 @@ public class Tester implements ApplicationRunner{
 	@Autowired
 	OrganisationUnitFetcher organisationUnitFetcher;
 	
+	@Autowired
+	RelationshipTypeFetcher relationshipTypeFetcher;
 	/**
 	 * Currently acts as the main function.
 	 */
@@ -53,6 +54,7 @@ public class Tester implements ApplicationRunner{
 		programStageFetcher.fetchAndCache();
 		dataElementFetcher.fetchAndCache();
 		organisationUnitFetcher.fetchAndCache();
+		relationshipTypeFetcher.fetchAndCache();
 		
 		apiCaller.getLocationBundle(APIConfiguration.OPENIMIS_LOCATION_BUNDLE);
 		
@@ -60,7 +62,7 @@ public class Tester implements ApplicationRunner{
 		apiCaller.getCoverageBundle(APIConfiguration.OPENIMIS_COVERAGE_BUNDLE + "&" + ParamsUtil.REF_DATE_PARAM);	
 		
 		apiCaller.getClaimAndClaimResponseBundleAndPostToDhis(APIConfiguration.OPENIMIS_CLAIM_BUNDLE + "&" + ParamsUtil.REF_DATE_PARAM + "&" + ParamsUtil.CLAIM_PAGE_SIZE, 
-				APIConfiguration.OPENIMIS_CLAIM_RESPONSE_BUNDLE + "&" + ParamsUtil.REF_DATE_PARAM+ "&" + ParamsUtil.CLAIM_PAGE_SIZE, 1);
+				APIConfiguration.OPENIMIS_CLAIM_RESPONSE_BUNDLE + "&" + ParamsUtil.REF_DATE_PARAM+ "&" + ParamsUtil.CLAIM_PAGE_SIZE, 105);
 		
 		
 		logger.info("----- Program execution finished! -----");

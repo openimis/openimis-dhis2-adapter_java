@@ -148,12 +148,12 @@ public class APICaller {
 	
 	public void getClaimAndClaimResponseBundleAndPostToDhis(String claimUrl, String claimResponseUrl, Integer pageOffset) {
 		RestTemplate restTemplate = new RestTemplate();
-		if(pageOffset < 14500) {
+		for(int pageitr= pageOffset; pageitr<14000; pageitr++) {
 			claimResponseCacheService.clear();
 			claimCacheService.clear();
 			try {
-				String currentClaimUrl = claimUrl + "&page-offset=" + String.valueOf(pageOffset);
-				String currentClaimResponseUrl = claimResponseUrl + "&page-offset=" + String.valueOf(pageOffset);
+				String currentClaimUrl = claimUrl + "&page-offset=" + String.valueOf(pageitr);
+				String currentClaimResponseUrl = claimResponseUrl + "&page-offset=" + String.valueOf(pageitr);
 				
 				logger.info("Fetching Claim and ClaimResponse bundle from url :" + currentClaimUrl);
 				ResponseEntity<ClaimResponseBundle> crResponse = restTemplate.exchange(currentClaimResponseUrl, HttpMethod.GET, request, ClaimResponseBundle.class);
@@ -165,12 +165,9 @@ public class APICaller {
 				fillInCacheClaim(claimBundle);
 				
 				postClaimsToDhis();
-				
-				getClaimAndClaimResponseBundleAndPostToDhis(claimUrl, claimResponseUrl, pageOffset+1);
 			} catch(Exception e) {
 				logger.error(e.getMessage());
-				logger.error("Claim/ClaimResponse fetch failed for page-offset=" + String.valueOf(pageOffset));
-				getClaimAndClaimResponseBundleAndPostToDhis(claimUrl, claimResponseUrl, pageOffset+1);
+				logger.error("Claim/ClaimResponse fetch failed for page-offset=" + String.valueOf(pageitr));
 			}
 		}
 	}

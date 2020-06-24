@@ -11,6 +11,7 @@ import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.event.EventBundleReques
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.tracked_entity.query.event.EventQueryDetail;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.tracked_entity.query.event.EventQueryResponse;
 import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
+import org.beehyv.dhis2openimis.adapter.util.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,6 +69,7 @@ public class ProgramStagePoster {
 	private TrackedEntityPostResponse addEvent(EventBundleRequestBody addEventRequestBody) {
 		HttpEntity<EventBundleRequestBody> request = new HttpEntity<>(addEventRequestBody, authHeader);
 		
+		logger.debug("Creating an event with request body: " + addEventRequestBody.toString());
 		ResponseEntity<TrackedEntityPostResponse> response = restTemplate.exchange(
 									APIConfiguration.DHIS_EVENTS_POST_URL, HttpMethod.POST, request, 
 									TrackedEntityPostResponse.class);

@@ -1,7 +1,5 @@
 package org.beehyv.dhis2openimis.adapter.dhis.claim;
 
-import java.time.LocalDate;
-
 import org.beehyv.dhis2openimis.adapter.dhis.cache.program.ProgramCache;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.post_response.TrackedEntityPostResponse;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.TrackedEntityRequest;

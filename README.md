@@ -39,7 +39,6 @@ This will contain the logs.
 For the current version the memory requirement is almost negligible, but that might change if we decide to fetch the openIMIS Patient or Claim data in bigger page-size and store them in-memory cache too.
 
 # Work in progress:
-1) Add Dhis2 relationship data for Insuree and Claim.
-2) Add a cron job, to execute the basic workflow every 24 hours, fetching only the data that was updated on the last date. Currently it fetches data last updated after 2019-01-01, using the refDate param. This can changed in ParamsUtil class in util package.
-3) Add a external application.properties file. This will contain the openIMIS url, Dhis2 url, their respective username and passwords. So changing these variables wont require making a new .jar file. Currently these can be changed in APIConfiguration class in util package.
+1) Add a cron job, to execute the basic workflow every 24 hours, fetching only the data that was updated on the last date. Currently it fetches data last updated after 2019-01-01, using the refDate param. This can changed in ParamsUtil class in util package.
+2) Add a external application.properties file. This will contain the openIMIS url, Dhis2 url, their respective username and passwords. So changing these variables wont require making a new .jar file. Currently these can be changed in APIConfiguration class in util package.
 

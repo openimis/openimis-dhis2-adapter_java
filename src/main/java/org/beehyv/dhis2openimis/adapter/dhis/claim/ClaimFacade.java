@@ -8,6 +8,7 @@ import org.beehyv.dhis2openimis.adapter.dhis.pojo.ClaimServiceAndItemAdapterRetu
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.DetailsJson;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.TrackedEntityRequest;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.event.Event;
+import org.beehyv.dhis2openimis.adapter.dhis.relationship.RelationshipFacade;
 import org.beehyv.dhis2openimis.adapter.dhis.util.CreateEventDataPojo;
 import org.beehyv.dhis2openimis.adapter.dhis.util.ProgramStagePoster;
 import org.beehyv.dhis2openimis.adapter.openimis.pojo.claim.Claim;
@@ -53,6 +54,8 @@ public class ClaimFacade {
 	@Autowired
 	private ClaimCacheService claimCache;
 	
+	@Autowired
+	private RelationshipFacade relationshipFacade;
 	
 	/**
 	 * Adapts an OpenImis ClaimResponse to Dhis Claim, and all its program stages and posts all the data to Dhis2 API.
@@ -74,15 +77,17 @@ public class ClaimFacade {
 		catch (ObjectNotFoundException e) { 
 			logger.info("Found no existing claim instance. Adding a new one");
 			internalData = claimPoster.postAndGetClaimManagementEnrollmentId(dhisClaimJson, createdDate);
+			
+			List<ClaimServiceAndItemAdapterReturn> servicesAndItemClaimedJsons = claimServiceAndItemAdapter.adapt(imisClaimResponse, imisClaim);
+			postServicesAndItemClaimed(internalData, servicesAndItemClaimedJsons);
+			logger.info("Finished adding Services and Items claimed data");
+			
+			addRelationship(dhisClaimJson, internalData, imisClaim);
 		}
 		
 		DetailsJson claimDetailJson = claimDetailsAdapter.adapt(imisClaimResponse, imisClaim);
 		postClaimDetail(internalData, claimDetailJson);
 		logger.info("Finished adding Claim Details data");
-		
-		List<ClaimServiceAndItemAdapterReturn> servicesAndItemClaimedJsons = claimServiceAndItemAdapter.adapt(imisClaimResponse, imisClaim);
-		postServicesAndItemClaimed(internalData, servicesAndItemClaimedJsons);
-		logger.info("Finished adding Services and Items claimed data");
 	}
 
 
@@ -117,6 +122,18 @@ public class ClaimFacade {
 				event = claimUtil.getEvent(internalData, "Claim - Services");
 			} 
 			programStagePoster.postProgramStageData(event, serviceAndItem.getDetailsJson());
+		}
+	}
+	
+	private void addRelationship(TrackedEntityRequest claimJson, CreateEventDataPojo internalData, Claim imisClaim) throws ObjectNotFoundException, InternalException {
+		String insureeId = imisClaim.getPatient().getReference().substring(8);
+		String dhisClaimTei = internalData.getTrackedEntityInstance();
+		
+		try {
+			relationshipFacade.addRelationship(claimJson, dhisClaimTei, insureeId);
+			logger.info("Relationship successfully added");
+		} catch (Exception e) {
+			logger.info("Relationship adding failed: " + e.getMessage());
 		}
 	}
 }

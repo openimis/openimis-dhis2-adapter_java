@@ -2,6 +2,7 @@ package org.beehyv.dhis2openimis.adapter.dhis.cache;
 
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.relationship_type.RelationshipType;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.relationship_type.RelationshipTypeBundle;
+import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -28,7 +29,12 @@ public class RelationshipTypeCache {
         }
     }
 
-    public String getByDisplayName(String displayName) {
-        return cache.get(displayName);
+    public String getByDisplayName(String displayName) throws ObjectNotFoundException {
+        String output = cache.get(displayName);
+        if(output == null) {
+        	throw new ObjectNotFoundException("No relationship type id found for : " + displayName);
+        } else {
+        	return output;
+        }
     }
 }

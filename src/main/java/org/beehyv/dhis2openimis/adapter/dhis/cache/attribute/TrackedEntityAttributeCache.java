@@ -31,7 +31,7 @@ public class TrackedEntityAttributeCache {
 		cache.putAll(entries);
 	}
 	
-	public String get(String id) {
-		return cache.get(id);
+	public String get(String displayName) {
+		return cache.get(displayName);
 	}
 }

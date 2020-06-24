@@ -56,8 +56,8 @@ public class InsureeAdapter {
 //        fillInsuranceNumberAttribute(insureeAttributes, openimisPatient);
         fillPhoneNumberAttribute(insureeAttributes, openimisPatient);
 //        fillFirstServicePointAttribute(insureeAttributes, openimisPatient);
-//        fillEducationAttribute(insureeAttributes, openimisPatient);
-//        fillProfessionAttribute(insureeAttributes, openimisPatient);
+        fillEducationAttribute(insureeAttributes, openimisPatient);
+        fillProfessionAttribute(insureeAttributes, openimisPatient);
 //        fillIdAttribute(insureeAttributes, openimisPatient);
 //        fillIdTypeAttribute(insureeAttributes, openimisPatient);
         fillInsureeIdAttribute(insureeAttributes, openimisPatient);
@@ -256,38 +256,32 @@ public class InsureeAdapter {
 
     private void fillEducationAttribute(List<Attribute> insureeAttributes, Patient openimisPatient) {
         String attribute = attributeCache.get("Education");
-        //TODO find what in imis claim maps to visit type
-        String value = "";
-        if (openimisPatient.getExtension() != null) {
-            for (ExtensionItem extensionItem : openimisPatient.getExtension()
-            ) {
+        try {
+            for (ExtensionItem extensionItem : openimisPatient.getExtension()) {
                 if (ExtensionUrlUtil.EDUCATION_CODE_URL.equals(extensionItem.getUrl())) {
-                    value = extensionItem.getValueString();
+                    String value = extensionItem.getValueString();
+                    insureeAttributes.add(new Attribute<String>(attribute, value));
                     break;
                 }
             }
-        } else {
-            value = "";
+        } catch(NullPointerException | IndexOutOfBoundsException e) {
+        	//Do nothing. No need to add this attribute, as a proper value couldn't be determined.
         }
-        insureeAttributes.add(new Attribute(attribute, value));
     }
 
     private void fillProfessionAttribute(List<Attribute> insureeAttributes, Patient openimisPatient) {
         String attribute = attributeCache.get("Profession");
-        //TODO find what in imis claim maps to visit type
-        String value = "";
-        if (openimisPatient.getExtension() != null) {
-            for (ExtensionItem extensionItem : openimisPatient.getExtension()
-            ) {
+        try {
+            for (ExtensionItem extensionItem : openimisPatient.getExtension()) {
                 if (ExtensionUrlUtil.PROFESSION_CODE_URL.equals(extensionItem.getUrl())) {
-                    value = extensionItem.getValueString();
+                    String value = extensionItem.getValueString();
+                    insureeAttributes.add(new Attribute<String>(attribute, value));
                     break;
                 }
             }
-        } else {
-            value = "";
+        } catch(NullPointerException | IndexOutOfBoundsException e) {
+        	//Do nothing. No need to add this attribute, as a proper value couldn't be determined.
         }
-        insureeAttributes.add(new Attribute(attribute, value));
     }
 
     private void fillIdAttribute(List<Attribute> insureeAttributes, Patient openimisPatient) {
