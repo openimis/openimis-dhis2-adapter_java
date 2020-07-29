@@ -4,11 +4,11 @@ import org.beehyv.dhis2openimis.adapter.dhis.pojo.post_response.TrackedEntityPos
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.TrackedEntityRequest;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.enrollment.EnrollmentRequestBody;
 import org.beehyv.dhis2openimis.adapter.dhis.util.CreateEventDataPojo;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -22,6 +22,12 @@ public class InsureePoster {
     private RestTemplate restTemplate;
     private HttpHeaders authHeaders;
     private InsureeUtil util;
+    
+    @Value("${app.dhis2.api.TrackedEntityInstances}")
+    private String teiUrl;
+    
+    @Value("${app.dhis2.api.Enrollments}")
+    private String enrollmentsUrl;
     
     @Autowired
     public InsureePoster(RestTemplate restTemplate ,@Qualifier("Dhis2")HttpHeaders authHeaders, InsureeUtil util) {
@@ -59,19 +65,19 @@ public class InsureePoster {
     private TrackedEntityPostResponse post(TrackedEntityRequest insuree) {
         HttpEntity<TrackedEntityRequest> request = new HttpEntity<TrackedEntityRequest>(insuree, authHeaders);
         try {
-        	ResponseEntity<TrackedEntityPostResponse> response = restTemplate.exchange(APIConfiguration.DHIS_TRACKED_ENTITY_INSTANCES_URL,
-                HttpMethod.POST, request, TrackedEntityPostResponse.class);
+        	ResponseEntity<TrackedEntityPostResponse> response = 
+        			restTemplate.exchange(teiUrl, HttpMethod.POST, request, TrackedEntityPostResponse.class);
         	return response.getBody();
         } catch(Exception e) {
-        	throw new RuntimeException("Posting " + insuree.toString() + " to url: " + APIConfiguration.DHIS_TRACKED_ENTITY_INSTANCES_URL);
+        	throw new RuntimeException("Posting " + insuree.toString() + " to url: " + teiUrl);
         }
     }
 
     private TrackedEntityPostResponse post(EnrollmentRequestBody enrollment) {
         HttpEntity<EnrollmentRequestBody> request = new HttpEntity<>(enrollment, authHeaders);
 
-        ResponseEntity<TrackedEntityPostResponse> response = restTemplate.exchange(
-                APIConfiguration.DHIS_ENROLLMENT_POST_URL, HttpMethod.POST, request, TrackedEntityPostResponse.class);
+        ResponseEntity<TrackedEntityPostResponse> response = 
+        		restTemplate.exchange(enrollmentsUrl, HttpMethod.POST, request, TrackedEntityPostResponse.class);
 
         return response.getBody();
     }

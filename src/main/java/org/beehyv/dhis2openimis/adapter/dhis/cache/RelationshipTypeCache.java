@@ -23,6 +23,8 @@ public class RelationshipTypeCache {
 
 
     public void save(RelationshipTypeBundle bundle) {
+    	cache.clear();
+    	
         List<RelationshipType> types = bundle.getRelationshipTypes();
         for(RelationshipType type : types) {
             cache.put(type.getDisplayName(), type.getId());

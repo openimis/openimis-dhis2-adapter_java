@@ -6,11 +6,11 @@ import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.TrackedEntityRequest;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.enrollment.EnrollmentRequestBody;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.program.Program;
 import org.beehyv.dhis2openimis.adapter.dhis.util.CreateEventDataPojo;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -20,12 +20,16 @@ import org.springframework.web.client.RestTemplate;
 
 @Component
 public class ClaimPoster {
-	
 	private static final Logger logger = LoggerFactory.getLogger(ClaimPoster.class);
-	
 	private RestTemplate restTemplate;
 	private HttpHeaders authHeaders;
 	private ProgramCache programCache;
+	
+	@Value("${app.dhis2.api.TrackedEntityInstances}")
+	private String teiUrl;
+	
+	@Value("${app.dhis2.api.Enrollments}")
+	private String enrollmentsUrl;
 	
 	@Autowired
 	public ClaimPoster(@Qualifier("Dhis2")HttpHeaders authHeaders, ProgramCache programCache, RestTemplate restTemplate) {
@@ -64,8 +68,8 @@ public class ClaimPoster {
 	}
 	
 	private String getClaimUpdateUrl(String claimTrackedEntityId) {
-    	StringBuilder url = new StringBuilder(APIConfiguration.DHIS_TRACKED_ENTITY_INSTANCES_URL);
-    	url.append("/" + claimTrackedEntityId);
+    	StringBuilder url = new StringBuilder(teiUrl);
+    	url.append(claimTrackedEntityId);
     	
     	String programId = getProgramDetails().getId();
     	url.append("?program=" + programId);
@@ -79,9 +83,9 @@ public class ClaimPoster {
 
 	private TrackedEntityPostResponse post(TrackedEntityRequest claim) {
 		HttpEntity<TrackedEntityRequest> request = new HttpEntity<TrackedEntityRequest>(claim, authHeaders);
-		logger.debug("Posting claim: " + claim.toString() + " to url: " + APIConfiguration.DHIS_TRACKED_ENTITY_INSTANCES_URL);
-		ResponseEntity<TrackedEntityPostResponse> response = restTemplate.exchange(APIConfiguration.DHIS_TRACKED_ENTITY_INSTANCES_URL, 
-				HttpMethod.POST, request, TrackedEntityPostResponse.class);
+		logger.debug("Posting claim: " + claim.toString() + " to url: " + teiUrl);
+		ResponseEntity<TrackedEntityPostResponse> response = 
+				restTemplate.exchange(teiUrl, HttpMethod.POST, request, TrackedEntityPostResponse.class);
 		
 		return response.getBody();
 	}
@@ -90,8 +94,8 @@ public class ClaimPoster {
 	private TrackedEntityPostResponse post(EnrollmentRequestBody enrollment) {
 		HttpEntity<EnrollmentRequestBody> request = new HttpEntity<>(enrollment, authHeaders);
 		
-		ResponseEntity<TrackedEntityPostResponse> response = restTemplate.exchange(
-				APIConfiguration.DHIS_ENROLLMENT_POST_URL, HttpMethod.POST, request, TrackedEntityPostResponse.class);
+		ResponseEntity<TrackedEntityPostResponse> response = 
+				restTemplate.exchange(enrollmentsUrl, HttpMethod.POST, request, TrackedEntityPostResponse.class);
 		
 		return response.getBody();
 	}

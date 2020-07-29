@@ -6,11 +6,12 @@ import org.beehyv.dhis2openimis.adapter.dhis.pojo.data_element.DataElement;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.data_element.DataElementDetail;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.data_element.DataElementDetailsBundle;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.data_element.DataElementsBundle;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
+import org.beehyv.dhis2openimis.adapter.util.ParamsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -27,16 +28,18 @@ import java.util.stream.Collectors;
 @Component
 public class DataElementFetcher {
     private static final Logger logger = LoggerFactory.getLogger(DataElementFetcher.class);
-
     private HttpEntity<Void> request;
     private RestTemplate restTemplate;
 
-    @Autowired
-    private CachingService optionsCache;
-
-    @Autowired
-    private DataElementCache dataElementCache;
-
+    @Autowired private CachingService optionsCache;
+    @Autowired private DataElementCache dataElementCache;
+    
+    @Value("${app.dhis2.api.DataElements}")
+    private String dataElementsUrl;
+    
+    @Value("${app.dhis2.api.Options}")
+    private String optionsUrl;
+    
     @Autowired
     public DataElementFetcher(@Qualifier("Dhis2") HttpHeaders authHeaders) {
         request = new HttpEntity<Void>(authHeaders);
@@ -62,7 +65,7 @@ public class DataElementFetcher {
 
 
     private DataElementDetailsBundle fetchAllDataElements() {
-        String url = APIConfiguration.DHIS2_DATA_ELEMENT_URL;
+        String url = dataElementsUrl + "?" + ParamsUtil.DATA_ELEMENTS_PARAM;
         ResponseEntity<DataElementDetailsBundle> response = restTemplate.exchange(url, HttpMethod.GET, request, DataElementDetailsBundle.class);
 
         DataElementDetailsBundle bundle = response.getBody();
@@ -83,11 +86,15 @@ public class DataElementFetcher {
 
     private List<DataElement> fetchOptionValuesBundle(DataElementDetail attribute) {
         String optionSetId = attribute.getOptionSet().getId();
-        String url = APIConfiguration.getOptionsUrl(optionSetId);
+        String url = getOptionsUrl(optionSetId);
 
         ResponseEntity<DataElementsBundle> response = restTemplate.exchange(url, HttpMethod.GET, request, DataElementsBundle.class);
 
         DataElementsBundle bundle = response.getBody();
         return bundle.getOptions();
+    }
+    
+    private String getOptionsUrl(String optionSetId) {
+    	return optionsUrl + "?paging=false&fields=id,displayName,code&filter=optionSet.id:eq:" + optionSetId;
     }
 }

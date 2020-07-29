@@ -27,6 +27,8 @@ public class DataElementCache {
 
 
     public void save(DataElementDetailsBundle bundle) {
+    	cache.clear();
+    	
         List<DataElementDetail> attributes = bundle.getDataElements();
         Map<String, String> entries = attributes.stream().collect(Collectors.toMap(
                 DataElementDetail::getDisplayName, DataElementDetail::getId));

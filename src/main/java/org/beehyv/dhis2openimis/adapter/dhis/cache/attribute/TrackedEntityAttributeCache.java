@@ -24,6 +24,8 @@ public class TrackedEntityAttributeCache {
 	
 	
 	public void save(TrackedEntityAttributeDetailBundle bundle) {
+		cache.clear();
+		
 		List<TrackedEntityAttributeDetail>  attributes = bundle.getTrackedEntityAttributes();
 		Map<String, String> entries = attributes.stream().collect(Collectors.toMap(
 				TrackedEntityAttributeDetail::getDisplayName, TrackedEntityAttributeDetail::getId));
@@ -34,4 +36,5 @@ public class TrackedEntityAttributeCache {
 	public String get(String displayName) {
 		return cache.get(displayName);
 	}
+
 }

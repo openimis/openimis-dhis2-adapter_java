@@ -22,6 +22,8 @@ public class ProgramStageCache {
 
 
     public void save(ProgramStageBundle bundle) {
+    	cache.clear();
+    	
         List<ProgramStage> attributes = bundle.getProgramStages();
         Map<String, String> entries = attributes.stream().collect(Collectors.toMap(
                 ProgramStage::getDisplayName, ProgramStage::getId));

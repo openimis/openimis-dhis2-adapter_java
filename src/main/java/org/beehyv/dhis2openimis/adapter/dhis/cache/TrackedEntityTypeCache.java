@@ -19,6 +19,8 @@ public class TrackedEntityTypeCache {
 	
 	
 	public void save(TrackedEntityTypeBundle bundle) {
+		cache.clear();
+		
 		List<TrackedEntityType> types = bundle.getTrackedEntityTypes();
 		for(TrackedEntityType type : types) {
 			cache.put(type.getDisplayName(), type.getId());

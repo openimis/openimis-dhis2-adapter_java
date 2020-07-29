@@ -10,12 +10,12 @@ import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.event.Event;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.event.EventBundleRequestBody;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.tracked_entity.query.event.EventQueryDetail;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.tracked_entity.query.event.EventQueryResponse;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
-import org.beehyv.dhis2openimis.adapter.util.exception.InternalException;
+import org.beehyv.dhis2openimis.adapter.util.ParamsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -33,6 +33,13 @@ public class ProgramStagePoster {
 	private static final Logger logger = LoggerFactory.getLogger(ProgramStagePoster.class);
 	private RestTemplate restTemplate;
 	private HttpHeaders authHeader;
+	
+	@Value("${app.dhis2.api.Events.Post}")
+	private String eventsPostUrl;
+	
+	@Value("${app.dhis2.api.Events}")
+	private String eventsUrl;
+	
 	
 	@Autowired
 	public ProgramStagePoster(RestTemplate restTemplate,@Qualifier("Dhis2") HttpHeaders authHeader) {
@@ -71,8 +78,7 @@ public class ProgramStagePoster {
 		
 		logger.debug("Creating an event with request body: " + addEventRequestBody.toString());
 		ResponseEntity<TrackedEntityPostResponse> response = restTemplate.exchange(
-									APIConfiguration.DHIS_EVENTS_POST_URL, HttpMethod.POST, request, 
-									TrackedEntityPostResponse.class);
+									eventsPostUrl, HttpMethod.POST, request, TrackedEntityPostResponse.class);
 		return response.getBody();
 	}
 	
@@ -82,7 +88,7 @@ public class ProgramStagePoster {
 	}
 	
 	private void postDataToEvent(DetailsJson json, String eventId) {
-		String url = APIConfiguration.getEventDetailsPostUrl(eventId);
+		String url = eventsUrl + eventId;
 		HttpEntity<DetailsJson> request = new HttpEntity<>(json, authHeader);
 		logger.debug("\nPreparing to PUT event data: " + json.toString() + " to url: " + url);
 		restTemplate.put(url, request);
@@ -107,13 +113,17 @@ public class ProgramStagePoster {
 	}
 	
 	private EventQueryResponse makeApiQueryForEvents(String trackedEntityInstanceId){
-		String getEventsUrl = APIConfiguration.getEventsForTrackedEntityInstanceQueryUrl(trackedEntityInstanceId);
+		String getEventsUrl = getEventsForTrackedEntityInstanceQueryUrl(trackedEntityInstanceId);
 		HttpEntity<Void> request = new HttpEntity<Void>(authHeader);
 		
 		ResponseEntity<EventQueryResponse> response = restTemplate.exchange(
 												getEventsUrl, HttpMethod.GET, request, EventQueryResponse.class);
 		return response.getBody();
 		
+	}
+	
+	private String getEventsForTrackedEntityInstanceQueryUrl(String trackedEntityInstanceId) {
+    	return eventsUrl + "?trackedEntityInstance=" + trackedEntityInstanceId + "&" + ParamsUtil.PAGER_PARAM;
 	}
 	
 	private List<String> extractEventIds(EventQueryResponse response){
@@ -128,7 +138,7 @@ public class ProgramStagePoster {
 	
 	//TODO get the API response to verify if deletion was success.
 	private void deleteEventId(String eventId) {
-		String url = APIConfiguration.getEventDeleteUrl(eventId);
+		String url = eventsUrl + eventId;
 		HttpEntity<Void> request = new HttpEntity<Void>(authHeader);
 		
 		restTemplate.exchange(url, HttpMethod.DELETE, request, Object.class);

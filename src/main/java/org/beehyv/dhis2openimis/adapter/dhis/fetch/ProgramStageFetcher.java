@@ -2,9 +2,10 @@ package org.beehyv.dhis2openimis.adapter.dhis.fetch;
 
 import org.beehyv.dhis2openimis.adapter.dhis.cache.program.ProgramStageCache;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.program.ProgramStageBundle;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
+import org.beehyv.dhis2openimis.adapter.util.ParamsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -20,7 +21,10 @@ public class ProgramStageFetcher {
     private RestTemplate restTemplate;
     private HttpEntity<Void> request;
     private ProgramStageCache cache;
-
+    
+    @Value("${app.dhis2.api.ProgramStages}")
+    private String programStagesUrl;
+    
     @Autowired
     public ProgramStageFetcher(@Qualifier("Dhis2") HttpHeaders authHeaders, ProgramStageCache cache) {
         request = new HttpEntity<Void>(authHeaders);
@@ -29,10 +33,13 @@ public class ProgramStageFetcher {
     }
 
     public void fetchAndCache() {
-        ResponseEntity<ProgramStageBundle> response = restTemplate.exchange(
-                APIConfiguration.DHIS_PROGRAM_STAGES_GET_URL,
-                HttpMethod.GET, request, ProgramStageBundle.class);
+    	String url = getUrl();
+        ResponseEntity<ProgramStageBundle> response = restTemplate.exchange(url, HttpMethod.GET, request, ProgramStageBundle.class);
         ProgramStageBundle bundle = response.getBody();
         cache.save(bundle);
     }
+
+	private String getUrl() {
+		return programStagesUrl + "?" + ParamsUtil.PAGER_PARAM;
+	}
 }

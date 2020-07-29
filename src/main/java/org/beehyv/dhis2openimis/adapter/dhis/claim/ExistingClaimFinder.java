@@ -8,21 +8,23 @@ import org.beehyv.dhis2openimis.adapter.dhis.util.CreateEventDataPojo;
 import org.beehyv.dhis2openimis.adapter.dhis.util.TrackedEntityQueryMaker;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.tracked_entity.query.EnrollmentDetail;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.tracked_entity.query.EnrollmentQueryResponse;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
 import org.beehyv.dhis2openimis.adapter.util.exception.InternalException;
 import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ExistingClaimFinder {
-	
 	private static final Logger logger = LoggerFactory.getLogger(ExistingClaimFinder.class);
 	private TrackedEntityAttributeCache attributeCache;
 	private ProgramCache programCache;
 	private TrackedEntityQueryMaker queryMaker;
+	
+	@Value("${app.dhis2.api.TrackedEntityInstances.Query}")
+	private String teiQueryUrl;
 	
 	@Autowired
 	public ExistingClaimFinder(TrackedEntityAttributeCache attributeCache, ProgramCache programCache, TrackedEntityQueryMaker queryMaker) {
@@ -49,8 +51,7 @@ public class ExistingClaimFinder {
 	
 	
 	private String constructUrl(String orgUnitId, String claimCode) {
-		String baseUrl = APIConfiguration.DHIS_TRACKED_ENTITY_INSTANCES_QUERY_URL;
-		String url = baseUrl + "ou=" + orgUnitId;
+		String url = teiQueryUrl + "ou=" + orgUnitId;
 		url += "&filter=";
 		String claimNumberAttributeId = attributeCache.get("Claim number");
 		url += claimNumberAttributeId + ":EQ:" + claimCode;

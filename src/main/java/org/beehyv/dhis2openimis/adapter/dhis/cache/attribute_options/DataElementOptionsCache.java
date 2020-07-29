@@ -19,6 +19,8 @@ public class DataElementOptionsCache {
     }
     
     public void save(List<DataElement> attributes) {
+    	cache.clear();
+    	
         for(DataElement attribute: attributes) {
             String key = attribute.getDisplayName();
             String code = attribute.getCode();

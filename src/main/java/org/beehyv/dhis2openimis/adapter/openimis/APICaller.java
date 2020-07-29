@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -72,7 +73,7 @@ public class APICaller {
 		this.policyDetailsFacade = policyDetailsFacade;
 		this.claimFacade = claimFacade;
 	}
-
+	
 	public void getCoverageBundle(String url) {
 		RestTemplate restTemplate = new RestTemplate();
 
@@ -174,7 +175,7 @@ public class APICaller {
 	
 	public void getLocationBundle(String url) {
 		RestTemplate restTemplate = new RestTemplate();
-
+		
 		ResponseEntity<LocationBundle> response = restTemplate.exchange(url, HttpMethod.GET, request, LocationBundle.class);
 		LocationBundle locationBundle = response.getBody();
 

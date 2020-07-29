@@ -26,9 +26,14 @@ You can do this by going into the project directory and typing the below command
 mvn -Dmaven.test.skip=true clean compile package
 2) The above step should create a .jar file in your project directory->target
 You can copy this .jar file to any other directory or machine.
-Using the terminal go to the directory with the .jar file and run it using:
+3) Copy the project's /src/main/resources/->application.properties file to the same folder as this above .jar file.
+Any config variables can be changed directly by updating this application.properties file, no need to remake this jar again.
+You should only update the openimis and dhis2 baseUrl, username and password values. 
+The property: 'app.schedule.cronExpression' is an cron-expression used to determine when to run the cycle. Currently it is set to run daily at 00:00:00 (12'o clock midnight). You may need to change it if you want to test and run, else program's first cycle will start at the next midnight.
+Touch the other config values, if you know what you are doing.
+4) Using the terminal go to the directory with the .jar file and run it using:
 java -Xms512m -Xmx2048m -jar JAR_FILE_NAME_HERE.jar &
-3) After running the program, a 'logs' directory will be created in the same directory as your .jar file.
+5) After running the program, a 'logs' directory will be created in the same directory as your .jar file.
 This will contain the logs.
 
 
@@ -39,6 +44,5 @@ This will contain the logs.
 For the current version the memory requirement is almost negligible, but that might change if we decide to fetch the openIMIS Patient or Claim data in bigger page-size and store them in-memory cache too.
 
 # Work in progress:
-1) Add a cron job, to execute the basic workflow every 24 hours, fetching only the data that was updated on the last date. Currently it fetches data last updated after 2019-01-01, using the refDate param. This can changed in ParamsUtil class in util package.
-2) Add a external application.properties file. This will contain the openIMIS url, Dhis2 url, their respective username and passwords. So changing these variables wont require making a new .jar file. Currently these can be changed in APIConfiguration class in util package.
+1) Only bug fixes.
 

@@ -9,11 +9,12 @@ import org.beehyv.dhis2openimis.adapter.dhis.pojo.tracked_entity.TrackedEntityAt
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.tracked_entity.TrackedEntityAttributeBundle;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.tracked_entity.TrackedEntityAttributeDetail;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.tracked_entity.TrackedEntityAttributeDetailBundle;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
+import org.beehyv.dhis2openimis.adapter.util.ParamsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -29,16 +30,19 @@ public class TrackedEntityAttributeAndOptionsFetcher {
 	private HttpEntity<Void> request;
 	private RestTemplate restTemplate;
 	
-	@Autowired
-	private CachingService optionsCache;
+	@Autowired private CachingService optionsCache;
+	@Autowired private TrackedEntityAttributeCache attributeCache;
+	
+	@Value("${app.dhis2.api.TrackedEntityAttributes}")
+	private String teaUrl;
+	
+	@Value("${app.dhis2.api.Options}")
+	private String optionsUrl;
 	
 	@Autowired
-	private TrackedEntityAttributeCache attributeCache;
-	
-	@Autowired
-	public TrackedEntityAttributeAndOptionsFetcher(@Qualifier("Dhis2") HttpHeaders authHeaders) {
-		request = new HttpEntity<Void>(authHeaders);
-		restTemplate = new RestTemplate();
+	public TrackedEntityAttributeAndOptionsFetcher(@Qualifier("Dhis2") HttpHeaders authHeaders, RestTemplate restTemplate) {
+		this.request = new HttpEntity<Void>(authHeaders);
+		this.restTemplate = restTemplate;
 	}
 	
 	
@@ -58,7 +62,7 @@ public class TrackedEntityAttributeAndOptionsFetcher {
 	
 	
 	private TrackedEntityAttributeDetailBundle getAllAttributes() {
-		String url = APIConfiguration.DHIS2_TRACKED_ENTITY_ATTRIBUTES_URL;
+		String url = teaUrl + "?" + ParamsUtil.TRACKED_ENTITY_ATTRIBUTES_PARAM;
 		ResponseEntity<TrackedEntityAttributeDetailBundle> response = restTemplate.exchange(url, HttpMethod.GET, request, TrackedEntityAttributeDetailBundle.class);
 		
 		TrackedEntityAttributeDetailBundle bundle = response.getBody();
@@ -79,12 +83,16 @@ public class TrackedEntityAttributeAndOptionsFetcher {
 	
 	private List<TrackedEntityAttribute> fetchOptionValuesBundle(TrackedEntityAttributeDetail attribute) {
 		String optionSetId = attribute.getOptionSet().getId();
-		String url = APIConfiguration.getOptionsUrl(optionSetId);
+		String url = getOptionsUrl(optionSetId);
 		
 		ResponseEntity<TrackedEntityAttributeBundle> response = restTemplate.exchange(url, HttpMethod.GET, request, TrackedEntityAttributeBundle.class);
 		
 		TrackedEntityAttributeBundle bundle = response.getBody();
 		return bundle.getOptions();
 	}
+	
+	private String getOptionsUrl(String optionSetId) {
+    	return optionsUrl + "?paging=false&fields=id,displayName,code&filter=optionSet.id:eq:" + optionSetId;
+    }
 	
 }

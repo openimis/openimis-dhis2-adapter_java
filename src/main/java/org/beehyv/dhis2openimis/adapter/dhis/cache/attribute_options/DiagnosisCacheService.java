@@ -18,6 +18,8 @@ public class DiagnosisCacheService extends TrackedEntityAttributeOptionsCache{
 	
 	@Override
 	public void save(List<TrackedEntityAttribute> attributes) {
+		cache.clear();
+		
 		for(TrackedEntityAttribute attribute: attributes) {
 			String key = attribute.getDisplayName().substring(0, 3);
 			String code = attribute.getCode();

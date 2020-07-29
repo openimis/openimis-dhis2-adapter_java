@@ -23,6 +23,8 @@ public class OrganisationUnitCacheService {
 	}
 	
 	public void save(List<OrganisationUnit> organisations) {
+		cache.clear();
+		
 		Map<String, String> entries = organisations.stream().filter(org -> (org.getCode()!=null)).collect(Collectors.toMap(
 										OrganisationUnit::getCode, OrganisationUnit::getId));
 		

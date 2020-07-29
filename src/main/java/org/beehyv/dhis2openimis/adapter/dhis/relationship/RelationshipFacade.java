@@ -6,12 +6,12 @@ import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.TrackedEntityRequest;
 import org.beehyv.dhis2openimis.adapter.dhis.relationship.pojo.TrackedEntityRequestComplete;
 import org.beehyv.dhis2openimis.adapter.dhis.relationship.util.RelationshipPoster;
 import org.beehyv.dhis2openimis.adapter.dhis.util.TrackedEntityQueryMaker;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
 import org.beehyv.dhis2openimis.adapter.util.exception.InternalException;
 import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,6 +23,9 @@ public class RelationshipFacade {
 	@Autowired private TrackedEntityQueryMaker teQueryMaker;
 	@Autowired private ProgramCache programCache;
 	@Autowired private TrackedEntityAttributeCache teaCache;
+	
+	@Value("${app.dhis2.api.TrackedEntityInstances.Query}")
+	private String teiQueryUrl;
 	
 	public RelationshipFacade() {
 		
@@ -38,7 +41,7 @@ public class RelationshipFacade {
 
 
 	private String getQueryUrlToFetchInsureeTei(String insureeId) {
-		StringBuilder url = new StringBuilder(APIConfiguration.DHIS_TRACKED_ENTITY_INSTANCES_QUERY_URL);
+		StringBuilder url = new StringBuilder(teiQueryUrl);
 		url.append("ouMode=ACCESSIBLE");
 		url.append("&");
 		

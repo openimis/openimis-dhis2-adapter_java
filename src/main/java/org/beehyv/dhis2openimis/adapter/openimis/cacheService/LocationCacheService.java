@@ -21,6 +21,8 @@ public class LocationCacheService {
     }
 
     public void save(List<Location> locations) {
+    	map.clear();
+    	
         Map<String, Location> newLocations = locations.stream()
                 .collect(Collectors.toMap(Location::getId, location->location));
 

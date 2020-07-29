@@ -5,11 +5,12 @@ import java.util.List;
 import org.beehyv.dhis2openimis.adapter.dhis.cache.org_unit.OrganisationUnitCacheService;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.organisation.OrganisationUnit;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.organisation.OrganisationUnitsBundle;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
+import org.beehyv.dhis2openimis.adapter.util.ParamsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -25,6 +26,9 @@ public class OrganisationUnitFetcher {
 	private RestTemplate restTemplate;
 	private OrganisationUnitCacheService orgCache;
 	
+	@Value("${app.dhis2.api.OrganisationUnits}")
+	private String orgUnitsUrl;
+	
 	@Autowired
 	public OrganisationUnitFetcher(@Qualifier("Dhis2") HttpHeaders authHeaders, OrganisationUnitCacheService orgCache) {
 		request = new HttpEntity<Void>(authHeaders);
@@ -34,7 +38,7 @@ public class OrganisationUnitFetcher {
 	
 	
 	public void fetchAndCache() {
-		String url = APIConfiguration.DHIS_ORGANISATION_UNITS_GET_URL;
+		String url = orgUnitsUrl + "?" + ParamsUtil.ORG_UNITS_PARAM;
 		OrganisationUnitsBundle bundle = getFromApi(url);
 		cache(bundle);
 		logger.info("Organisation unit data extraction complete");

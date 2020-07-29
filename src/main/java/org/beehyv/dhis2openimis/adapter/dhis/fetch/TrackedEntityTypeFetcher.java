@@ -2,9 +2,10 @@ package org.beehyv.dhis2openimis.adapter.dhis.fetch;
 
 import org.beehyv.dhis2openimis.adapter.dhis.cache.TrackedEntityTypeCache;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.type.TrackedEntityTypeBundle;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
+import org.beehyv.dhis2openimis.adapter.util.ParamsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -14,10 +15,12 @@ import org.springframework.web.client.RestTemplate;
 
 @Component
 public class TrackedEntityTypeFetcher {
-	
 	private RestTemplate restTemplate;
 	private HttpEntity<Void> request;
 	private TrackedEntityTypeCache cache;
+	
+	@Value("${app.dhis2.api.TrackedEntityTypes}")
+	private String trackedEntityTypesUrl;
 	
 	@Autowired
 	public TrackedEntityTypeFetcher(@Qualifier("Dhis2") HttpHeaders authHeaders, TrackedEntityTypeCache cache) {
@@ -27,13 +30,17 @@ public class TrackedEntityTypeFetcher {
 	}
 	
 	public void fetchAndCache() {
-		ResponseEntity<TrackedEntityTypeBundle> response = restTemplate.exchange(
-														APIConfiguration.DHIS_TRACKED_ENTITY_TYPES_GET_URL, 
-														HttpMethod.GET, request, TrackedEntityTypeBundle.class);
+		String url = getUrl();
+		ResponseEntity<TrackedEntityTypeBundle> response = 
+				restTemplate.exchange(url, HttpMethod.GET, request, TrackedEntityTypeBundle.class);
 		
 		TrackedEntityTypeBundle bundle = response.getBody();
 		
 		cache.save(bundle);
+	}
+
+	private String getUrl() {
+		return trackedEntityTypesUrl + "?" + ParamsUtil.PAGER_PARAM;
 	}
 	
 	

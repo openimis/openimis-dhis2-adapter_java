@@ -22,6 +22,8 @@ public class ProgramCache {
 
 
     public void save(ProgramBundle bundle) {
+    	cache.clear();
+    	
         List<Program> attributes = bundle.getPrograms();
         Map<String, Program> entries = attributes.stream().collect(Collectors.toMap(
         									Program::getDisplayName, program -> program));

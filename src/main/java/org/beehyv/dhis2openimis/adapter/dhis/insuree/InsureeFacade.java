@@ -1,14 +1,13 @@
 package org.beehyv.dhis2openimis.adapter.dhis.insuree;
 
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.TrackedEntityRequest;
-import org.beehyv.dhis2openimis.adapter.dhis.util.ProgramStagePoster;
 import org.beehyv.dhis2openimis.adapter.openimis.pojo.patient.Patient;
-import org.beehyv.dhis2openimis.adapter.util.APIConfiguration;
 import org.beehyv.dhis2openimis.adapter.util.exception.InternalException;
 import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -18,21 +17,15 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class InsureeFacade {
-
     private static final Logger logger = LoggerFactory.getLogger(InsureeFacade.class);
 
-    @Autowired
-    private InsureeAdapter insureeAdapter;
-
-    @Autowired
-    private InsureePoster insureePoster;
-
-    @Autowired
-    private ExistingInsureeFinder existingInsureeFinder;
-
-    @Autowired
-    private InsureeUtil util;
+    @Autowired private InsureeAdapter insureeAdapter;
+    @Autowired private InsureePoster insureePoster;
+    @Autowired private ExistingInsureeFinder existingInsureeFinder;
+    @Autowired private InsureeUtil util;
     
+    @Value("${app.dhis2.api.TrackedEntityInstances}")
+    private String teiUrl;
     
     public void adaptAndPost(Patient openImisPatient) throws InternalException, ObjectNotFoundException {
     	TrackedEntityRequest patient = insureeAdapter.adapt(openImisPatient);
@@ -54,8 +47,8 @@ public class InsureeFacade {
     
     
     private String getInsureeUpdateUrl(String insureeTrackedEntityId) {
-    	StringBuilder url = new StringBuilder(APIConfiguration.DHIS_TRACKED_ENTITY_INSTANCES_URL);
-    	url.append("/" + insureeTrackedEntityId);
+    	StringBuilder url = new StringBuilder(teiUrl);
+    	url.append(insureeTrackedEntityId);
     	
     	String programId = util.getProgramId();
     	url.append("?program=" + programId);
