@@ -146,31 +146,57 @@ public class APICaller {
 //
 //	}
 	
-	
-	public void getClaimAndClaimResponseBundleAndPostToDhis(String claimUrl, String claimResponseUrl, Integer pageOffset) {
+	public void getClaimBundle(String url) {
 		RestTemplate restTemplate = new RestTemplate();
-		for(int pageitr= pageOffset; pageitr<14000; pageitr++) {
-			claimResponseCacheService.clear();
-			claimCacheService.clear();
-			try {
-				String currentClaimUrl = claimUrl + "&page-offset=" + String.valueOf(pageitr);
-				String currentClaimResponseUrl = claimResponseUrl + "&page-offset=" + String.valueOf(pageitr);
-				
-				logger.info("Fetching Claim and ClaimResponse bundle from url :" + currentClaimUrl);
-				ResponseEntity<ClaimResponseBundle> crResponse = restTemplate.exchange(currentClaimResponseUrl, HttpMethod.GET, request, ClaimResponseBundle.class);
-				ClaimResponseBundle claimResponseBundle = crResponse.getBody();
-				fillInCacheClaimResponse(claimResponseBundle);
-				
-				ResponseEntity<ClaimBundle> response = restTemplate.exchange(currentClaimUrl, HttpMethod.GET, request, ClaimBundle.class);
-				ClaimBundle claimBundle = response.getBody();
-				fillInCacheClaim(claimBundle);
-				
-				postClaimsToDhis();
-			} catch(Exception e) {
-				logger.error(e.getMessage());
-				logger.error("Claim/ClaimResponse fetch failed for page-offset=" + String.valueOf(pageitr));
-			}
+
+		ResponseEntity<ClaimBundle> response = restTemplate.exchange(url, HttpMethod.GET, request, ClaimBundle.class);
+		ClaimBundle claimBundle = response.getBody();
+		//ClaimCacheService.clear();
+		fillInCacheClaim(claimBundle);
+
+		try {
+			String nextPageUrl = getNextPageUrl(claimBundle);
+			logger.info("Fetching Coverage bundle from url :" + nextPageUrl);
+			getClaimBundle(nextPageUrl);
+		} catch (NoSuchElementException e) {
+			logger.info("---- Imis claim data export completed ----");
 		}
+
+	}
+	
+	public void getClaimResponseBundle(String url) {
+		RestTemplate restTemplate = new RestTemplate();
+
+		ResponseEntity<ClaimResponseBundle> crResponse = restTemplate.exchange(url, HttpMethod.GET, request, ClaimResponseBundle.class);
+		ClaimResponseBundle claimResponseBundle = crResponse.getBody();
+		//claimResponseCacheService.clear();
+		fillInCacheClaimResponse(claimResponseBundle);
+		try {
+			String nextPageUrl = getNextPageUrl(claimResponseBundle);
+			logger.info("Fetching Coverage bundle from url :" + nextPageUrl);
+			getClaimResponseBundle(nextPageUrl);
+		} catch (NoSuchElementException e) {
+			logger.info("---- Imis ClaimResponse data export completed ----");
+		}
+
+	}
+	public void getClaimAndClaimResponseBundleAndPostToDhis(String claimUrl, String claimResponseUrl) {
+		//RestTemplate restTemplate = new RestTemplate();
+		
+		claimResponseCacheService.clear();
+		claimCacheService.clear();
+		try {
+			String currentClaimUrl = claimUrl ;
+			String currentClaimResponseUrl = claimResponseUrl;
+			logger.info("Fetching Claim and ClaimResponse bundle from url :" + currentClaimUrl);
+			getClaimResponseBundle(currentClaimUrl);
+			getClaimBundle(currentClaimResponseUrl);
+			postClaimsToDhis();
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+			logger.error("Claim/ClaimResponse fetch failed");
+		}
+	
 	}
 	
 	public void getLocationBundle(String url) {
@@ -210,50 +236,51 @@ public class APICaller {
 	
 	private void fillInCachePatient(PatientBundle patientBundle) {
 		List<PatientResource> patientResources = patientBundle.getEntry();
-		
-		List<Patient> patients = patientResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
-		
-		patientCacheService.save(patients);
+		if( patientResources != null && !patientResources.isEmpty()){
+			List<Patient> patients = patientResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
+			patientCacheService.save(patients);
+		}
 	}
 
 	private void fillInCacheCoverage(CoverageBundle coverageBundle) {
 		List<CoverageResource> coverageResources = coverageBundle.getEntry();
+		if( coverageResources != null && !coverageResources.isEmpty()){
+			List<Coverage> coverages = coverageResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
 
-		List<Coverage> coverages = coverageResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
-
-		coverageCacheService.save(coverages);
+			coverageCacheService.save(coverages);
+		}
 	}
 
 	private void fillInCacheClaim(ClaimBundle claimBundle) {
 		List<ClaimResource> claimResources = claimBundle.getEntry();
-
-		List<Claim> claims = claimResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
-
-		claimCacheService.save(claims);
+		if(claimResources != null && !claimResources.isEmpty()){
+			List<Claim> claims = claimResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
+			claimCacheService.save(claims);
+		}
 	}
 
 	private void fillInCacheClaimResponse(ClaimResponseBundle claimResponseBundle) {
 		List<ClaimResponseResource> claimResponseResources = claimResponseBundle.getEntry();
-
-		List<ClaimResponse> claimResponses = claimResponseResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
-
-		claimResponseCacheService.save(claimResponses);
+		if(claimResponseResources != null && !claimResponseResources.isEmpty()){
+			List<ClaimResponse> claimResponses = claimResponseResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
+			claimResponseCacheService.save(claimResponses);
+		}
 	}
 
 	private void fillInCacheLocation(LocationBundle locationBundle) {
 		List<LocationResource> locationResources = locationBundle.getEntry();
-
-		List<Location> locations = locationResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
-
-		locationCacheService.save(locations);
+		if(locationResources != null && !locationResources.isEmpty()){
+			List<Location> locations = locationResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
+			locationCacheService.save(locations);
+		}
 	}
 
 	private void fillInCachePractitioner(PractitionerBundle practitionerBundle) {
 		List<PractitionerResource> practitionerResources = practitionerBundle.getEntry();
-
-		List<Practitioner> practitioners = practitionerResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
-
-		practitionerCacheService.save(practitioners);
+		if(practitionerResources != null && !practitionerResources.isEmpty()){
+			List<Practitioner> practitioners = practitionerResources.stream().map(p -> p.getResource()).collect(Collectors.toList());
+			practitionerCacheService.save(practitioners);
+		}
 	}
 	
 	
@@ -261,7 +288,7 @@ public class APICaller {
 		List<LinkDetail> links = bundle.getLink();
 		for(LinkDetail link : links) {
 			if(link.getRelation().equals("next")) {
-				return link.getUrl().replace("http:", "https:");
+				return link.getUrl();
 			}
 		}
 		throw new NoSuchElementException();
