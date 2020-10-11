@@ -5,9 +5,9 @@ import org.beehyv.dhis2openimis.adapter.dhis.cache.attribute.TrackedEntityAttrib
 import org.beehyv.dhis2openimis.adapter.dhis.cache.org_unit.OrganisationUnitCacheService;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.Attribute;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.TrackedEntityRequest;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.ExtensionItem;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.TelecomDetail;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.patient.Patient;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.ExtensionItem;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.TelecomDetail;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.patient.Patient;
 import org.beehyv.dhis2openimis.adapter.util.ExtensionUrlUtil;
 import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
 import org.slf4j.Logger;
@@ -88,6 +88,12 @@ public class InsureeAdapter {
                     return orgUnit;
                 }
             }
+        }else if (openImisPatient.getLocationCode() != null) {
+           
+            String locationCode = openImisPatient.getLocationCode();
+            String orgUnit = orgUnitCache.getByCode(locationCode);
+            return orgUnit;
+
         } 
     	throw new ObjectNotFoundException("No location code extension found!");
     }

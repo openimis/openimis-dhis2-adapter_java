@@ -1,7 +1,7 @@
 package org.beehyv.dhis2openimis.adapter;
 
 import org.beehyv.dhis2openimis.adapter.dhis.fetch.*;
-import org.beehyv.dhis2openimis.adapter.openimis.APICaller;
+import org.beehyv.dhis2openimis.adapter.fhir.APICaller;
 
 import org.beehyv.dhis2openimis.adapter.util.ParamsUtil;
 import org.slf4j.Logger;
@@ -51,9 +51,10 @@ public class Tester{
 	String imisClaimResponseUrl;
 	@Value("${app.openimis.api.Patient}")
 	String imisPatientUrl;
-	@Value("${app.openimis.api.Coverage}")
+	@Value("${app.openimis.api.Contract}")
 	String imisCoverageUrl;
-	
+	@Value("${app.dhis2.baseUrl}")
+	String DHIS2Url;
 	public void run(){
 		final Logger logger = LoggerFactory.getLogger(Tester.class);
 		
@@ -65,11 +66,9 @@ public class Tester{
 		organisationUnitFetcher.fetchAndCache();
 		relationshipTypeFetcher.fetchAndCache();
 		
-		apiCaller.getLocationBundle(imisLocationUrl);
-		
-		apiCaller.getPatientBundleAndPostToDhis(imisPatientUrl + "?" + ParamsUtil.REF_DATE_PARAM);
-		apiCaller.getCoverageBundle(imisCoverageUrl + "?" + ParamsUtil.REF_DATE_PARAM);	
-		
+		apiCaller.getLocationBundleAndPostToDHIS2(imisLocationUrl +"?"+ParamsUtil.LOCATION_PAGE_SIZE,DHIS2Url );
+		apiCaller.getPatientBundleAndPostToDhis(imisPatientUrl + "?" + ParamsUtil.REF_DATE_PARAM + "&" + ParamsUtil.PATIENT_PAGE_SIZE);
+		apiCaller.getContractBundle(imisCoverageUrl + "?" + ParamsUtil.REF_DATE_PARAM + "&" + ParamsUtil.COVERAGE_PAGE_SIZE);	
 		apiCaller.getClaimAndClaimResponseBundleAndPostToDhis(imisClaimUrl + "?" + ParamsUtil.REF_DATE_PARAM + "&" + ParamsUtil.CLAIM_PAGE_SIZE, 
 				imisClaimResponseUrl + "?" + ParamsUtil.REF_DATE_PARAM+ "&" + ParamsUtil.CLAIM_PAGE_SIZE);
 		

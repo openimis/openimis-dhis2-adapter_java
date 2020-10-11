@@ -5,8 +5,12 @@ import org.beehyv.dhis2openimis.adapter.dhis.cache.data_element.DataElementCache
 import org.beehyv.dhis2openimis.adapter.dhis.cache.program.ProgramCache;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.DataValue;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.DetailsJson;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.ExtensionItem;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.coverage.Coverage;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.ExtensionItem;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.contract.FHIRContract;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.contract.FHIRValuedItem;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.contract.FHIRAsset;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.contract.FHIRValuedItem;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.general.FHIRPeriod;
 import org.beehyv.dhis2openimis.adapter.util.ExtensionUrlUtil;
 import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
 import org.slf4j.Logger;
@@ -35,45 +39,43 @@ public class PolicyDetailsAdapter {
     }
 
     
-    public DetailsJson adaptCoverageToPolicyDetails(Coverage coverage) throws ObjectNotFoundException {
+    public DetailsJson adaptContractToPolicyDetails(FHIRContract contract) throws ObjectNotFoundException {
     	DetailsJson json  = new DetailsJson();
-    	String programId = programCache.getByDisplayName("Family/Insuree").getId();
+        String programId = programCache.getByDisplayName("Family/Insuree").getId();
+        FHIRAsset contractAsset = contract.getTerm().get(0).getAsset().get(0);
         json.setProgram(programId);
         json.setStatus("COMPLETED");
         json.setCompletedDate(LocalDate.now().toString());
         
-    	String enrollDateString = getEnrollDateString(coverage);
+    	String enrollDateString = getEnrollDateString(contractAsset);
     	json.setEventDate(enrollDateString);
         
 		List<DataValue> dataValues = new ArrayList<>();
+        
 
-        fillPolicyId(dataValues, coverage);
-        fillProduct(dataValues, coverage);
-        fillPolicyStage(dataValues, coverage);
-        fillPolicyStatus(dataValues, coverage);
-        fillPolicyValue(dataValues, coverage);
+        fillPolicyId(dataValues, contract);
+        fillProduct(dataValues, contractAsset);
+        fillPolicyStage(dataValues, contract);
+        fillPolicyStatus(dataValues, contract);
+        fillPolicyValue(dataValues, contractAsset);
 
         json.setDataValues(dataValues);
         return json;
     }
     
-    public String getEnrollDateString(Coverage coverage) throws ObjectNotFoundException {
-    	if (coverage.getExtension() != null) {
-            for (ExtensionItem extensionItem : coverage.getExtension()) {
-                if (ExtensionUrlUtil.ENROLL_DATE_URL.equals(extensionItem.getUrl())) {
-                    return extensionItem.getValueDate();
-                }
-            }
-            throw new ObjectNotFoundException("No EnrollDate found in coverage ");
-        } else {
-        	throw new ObjectNotFoundException("No extension list found in coverage ");
-        }
+    public String getEnrollDateString(FHIRAsset contractAsset) throws ObjectNotFoundException {
+        List<FHIRPeriod> period = contractAsset.getPeriod();
+        if ( period != null && period.get(0)!= null ) {
+            return period.get(0).getStart();
+        }else{
+            throw new ObjectNotFoundException("No EnrollDate found in contract ");
+        } 
     }
     
-    private void fillPolicyId(List<DataValue> dataValues, Coverage coverage) {
+    private void fillPolicyId(List<DataValue> dataValues, FHIRContract contract) {
     	try {
-    		String value = coverage.getIdentifier().get(0).getValue();
-    		String dataElementId = dataElementCache.get("Policy ID");
+    		String value = contract.getIdentifier().get(0).getValue();
+            String dataElementId = dataElementCache.get("Policy ID");
 	        DataValue<String> dataValue = new DataValue<>(dataElementId, value);
 	        dataValues.add(dataValue);
     	} catch(NullPointerException | IndexOutOfBoundsException e) {
@@ -81,10 +83,10 @@ public class PolicyDetailsAdapter {
     	}
     }
 
-    private void fillProduct(List<DataValue> dataValues, Coverage openImisCoverage) {
+    private void fillProduct(List<DataValue> dataValues, FHIRAsset contractAsset) {
     	try {
     		String dataElementId = dataElementCache.get("Product");
-    		String value = openImisCoverage.getGrouping().getPlan();
+    		String value = contractAsset.getTypeReference().get(0).getDisplay();
     		DataValue<String> dataValue = new DataValue<>(dataElementId, value);
     		dataValues.add(dataValue);
     	} catch(NullPointerException | IndexOutOfBoundsException e) {
@@ -92,23 +94,18 @@ public class PolicyDetailsAdapter {
     	}
     }
 
-    private void fillPolicyStage(List<DataValue> dataValues, Coverage openImisCoverage) {
+    private void fillPolicyStage(List<DataValue> dataValues, FHIRContract contract) {
         String dataElementId = dataElementCache.get("Policy stage");
         String value = "";
-        if (openImisCoverage.getExtension() != null) {
-            for (ExtensionItem extensionItem : openImisCoverage.getExtension()) {
-                if (ExtensionUrlUtil.STAGE_URL.equals(extensionItem.getUrl())) {
-                    value = extensionItem.getValueString();
-                    break;
-                }
-            }
+        if (contract.getLegalState() != null) {
+            value = contract.getLegalState().getText();
         } else {
             value = "";
         }
 
-        if ("N".equals(value)) {
+        if ("Offered".equals(value)) {
             value = "New policy";
-        } else if ("R".equals(value)) {
+        } else if ("Renewed".equals(value)) {
             value = "Renewed  policy";
         }
 
@@ -116,28 +113,41 @@ public class PolicyDetailsAdapter {
         dataValues.add(dataValue);
     }
 
-    private void fillPolicyStatus(List<DataValue> dataValues, Coverage coverage){
+    private void fillPolicyStatus(List<DataValue> dataValues, FHIRContract contract){
         //TODO get from openImisClaim then use OptionsCache.
         try {
-        	String imisValue = coverage.getStatus();
-        	String upperCaseImisvalue = imisValue.substring(0,1).toUpperCase() + imisValue.substring(1);
-        	String value = policyStatusCache.getCodeFor(upperCaseImisvalue);
+            String value = contract.getStatus();
+            if ("Offered".equals(value)) {
+                value = "Idle";
+            } else if ("Terminated".equals(value)) {
+                value = "Expired";
+            } else if ("Disputed".equals(value)) {
+                value = "Suspended";
+            } else if ("Executable".equals(value)) {
+                value = "Ready";
+            }else if ("Policy".equals(value)) {
+                value = "Active";
+            }
+        	//String upperCaseImisvalue = imisValue.substring(0,1).toUpperCase() + imisValue.substring(1);
+        	//String value = policyStatusCache.getCodeFor(upperCaseImisvalue);
         	String dataElementId = dataElementCache.get("Policy status");
         	DataValue<String> dataValue = new DataValue<>(dataElementId, value);
             dataValues.add(dataValue);
         } catch(NullPointerException e) {
-        	//Do nothing, as no proper mapping was found.
-        } catch(ObjectNotFoundException e) {
-        	logger.error(e.getMessage());
-        }
+            //Do nothing, as no proper mapping was found.
+            logger.error(e.getMessage());
+        } 
     }
 
-    private void fillPolicyValue(List<DataValue> dataValues, Coverage coverage) {
+    private void fillPolicyValue(List<DataValue> dataValues, FHIRAsset contractAsset) {
         String dataElementId = dataElementCache.get("Policy Value ");
-        Double value = null;
-        if (coverage.getContract() != null) {
-            value = coverage.getContract().get(0).getValuedItem().get(0).getNet().getValue();
-        }
+        
+        FHIRValuedItem valuedItems = contractAsset.getValuedItem().get(0) ;
+        Double value = valuedItems.getNet().getValue();
+       
+        //if (contract.getContract() != null) {
+        //    value = contract.getContract().get(0).getValuedItem().get(0).getNet().getValue();
+        //}
         DataValue<Double> dataValue = new DataValue<>(dataElementId, value);
         if(value != null) {
         	dataValues.add(dataValue);

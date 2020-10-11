@@ -1,6 +1,6 @@
 package org.beehyv.dhis2openimis.adapter.dhis.cache.attribute_options;
 
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.claim.Claim;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.claim.Claim;
 import org.springframework.stereotype.Service;
 
 /**

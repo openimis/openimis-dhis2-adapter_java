@@ -39,13 +39,13 @@ public class InsureePoster {
     
     public CreateEventDataPojo postInsuree(TrackedEntityRequest insuree, String registrationDate) {
         TrackedEntityPostResponse insureeResponse = post(insuree);
-        logger.debug("Insuree posted!");
+        //logger.debug("Insuree posted!");
 
         String orgUnit = insuree.getOrgUnit();
         String trackedEntityId = getReferenceId(insureeResponse);
         EnrollmentRequestBody enrollment = buildEnrollmentBody(trackedEntityId, orgUnit, registrationDate);
         TrackedEntityPostResponse enrollmentResponse = post(enrollment);
-        logger.debug("Insuree enrollment posted");
+        //logger.debug("Insuree enrollment posted");
 
         String enrollmentId = getReferenceId(enrollmentResponse);
         
@@ -58,7 +58,7 @@ public class InsureePoster {
     public void updateInsureeDetails(String url, TrackedEntityRequest insuree) {
     	HttpEntity<TrackedEntityRequest> request = new HttpEntity<>(insuree, authHeaders);
     	restTemplate.put(url, request);
-    	logger.debug("Insuree data updated!");
+    	//logger.debug("Insuree data updated!");
     }
     
     

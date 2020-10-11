@@ -1,7 +1,7 @@
 package org.beehyv.dhis2openimis.adapter.dhis.insuree;
 
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.TrackedEntityRequest;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.patient.Patient;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.patient.Patient;
 import org.beehyv.dhis2openimis.adapter.util.exception.InternalException;
 import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
 import org.slf4j.Logger;
@@ -34,7 +34,7 @@ public class InsureeFacade {
     	String orgUnitId = insureeAdapter.getOrgUnit(openImisPatient);
     	try {
     		String insureeTrackedEntityId = existingInsureeFinder.getInsureeTrackedEntityId(orgUnitId, insureeId);
-    		logger.info("Found an active insuree. Updating the same instance");
+    		//logger.info("Found an active insuree. Updating the same instance");
     		String insureeUpdateUrl = getInsureeUpdateUrl(insureeTrackedEntityId);
     		insureePoster.updateInsureeDetails(insureeUpdateUrl, patient);
     		//programStagePoster.deleteAllEvents(insureeTrackedEntityId);

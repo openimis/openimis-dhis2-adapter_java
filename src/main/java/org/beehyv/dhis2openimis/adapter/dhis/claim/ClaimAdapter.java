@@ -9,7 +9,7 @@ import org.beehyv.dhis2openimis.adapter.dhis.cache.attribute_options.DiagnosisCa
 import org.beehyv.dhis2openimis.adapter.dhis.cache.attribute_options.VisitTypeCacheService;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.Attribute;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.TrackedEntityRequest;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.claim.Claim;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.claim.Claim;
 import org.beehyv.dhis2openimis.adapter.util.exception.InternalException;
 import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
 import org.slf4j.Logger;

@@ -2,7 +2,7 @@ package org.beehyv.dhis2openimis.adapter.dhis.claim;
 
 import java.util.List;
 
-import org.beehyv.dhis2openimis.adapter.openimis.cacheService.ClaimCacheService;
+import org.beehyv.dhis2openimis.adapter.fhir.cacheService.ClaimCacheService;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.ClaimItemOrService;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.ClaimServiceAndItemAdapterReturn;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.DetailsJson;
@@ -11,8 +11,8 @@ import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.event.Event;
 import org.beehyv.dhis2openimis.adapter.dhis.relationship.RelationshipFacade;
 import org.beehyv.dhis2openimis.adapter.dhis.util.CreateEventDataPojo;
 import org.beehyv.dhis2openimis.adapter.dhis.util.ProgramStagePoster;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.claim.Claim;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.claimResponse.ClaimResponse;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.claim.Claim;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.claimResponse.ClaimResponse;
 import org.beehyv.dhis2openimis.adapter.util.exception.InternalException;
 import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
 import org.slf4j.Logger;

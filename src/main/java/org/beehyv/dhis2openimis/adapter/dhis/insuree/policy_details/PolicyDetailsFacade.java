@@ -10,8 +10,12 @@ import org.beehyv.dhis2openimis.adapter.dhis.insuree.PolicyDetailsAdapter;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.DetailsJson;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.event.Event;
 import org.beehyv.dhis2openimis.adapter.dhis.util.ProgramStagePoster;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.ExtensionItem;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.coverage.Coverage;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.ExtensionItem;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.contract.FHIRContract;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.contract.FHIRAsset;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.general.FHIRReference;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.contract.FHIRContext;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.coverage.Coverage;
 import org.beehyv.dhis2openimis.adapter.util.ExtensionUrlUtil;
 import org.beehyv.dhis2openimis.adapter.util.exception.InternalException;
 import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
@@ -39,49 +43,54 @@ public class PolicyDetailsFacade {
 		
 	}
 	
-	public void adaptAndPost(Coverage coverage) throws ObjectNotFoundException, InternalException{
-    	DetailsJson policyDetailJson = policyDetailsAdapter.adaptCoverageToPolicyDetails(coverage);
-    	List<InsureeIdAndOrgUnitPojo> insureesDetails = getInsureesDetails(coverage);
-    	
+	public void adaptAndPost(FHIRContract contract) throws ObjectNotFoundException, InternalException{
+
+		FHIRAsset contractAsset = contract.getTerm().get(0).getAsset().get(0);
+		if(contractAsset == null ) throw  new ObjectNotFoundException("No Asset found in the first Term of contract");
+		DetailsJson policyDetailJson = policyDetailsAdapter.adaptContractToPolicyDetails(contract);
+		List<InsureeIdAndOrgUnitPojo> insureesDetails = getInsureesDetails(contractAsset);
     	for(InsureeIdAndOrgUnitPojo insureeDetail : insureesDetails) {
+			Integer step = 0;
     		String orgUnit = orgUnitCache.getByCode(insureeDetail.getOrgUnitId());
     		try {
-    			String teiId = existingInsureeFinder.getInsureeTrackedEntityId(orgUnit, insureeDetail.getInsureeId());
-    			String enrollmentId = existingInsureeFinder.getEnrollmentIdForTeiId(teiId);
-    			Event policyDetailEvent = convertToEvent(orgUnit, teiId, enrollmentId);
+				String teiId = existingInsureeFinder.getInsureeTrackedEntityId(orgUnit, insureeDetail.getInsureeId());
+				String enrollmentId = existingInsureeFinder.getEnrollmentIdForTeiId(teiId);
+				Event policyDetailEvent = convertToEvent(orgUnit, teiId, enrollmentId);
     			programStagePoster.postProgramStageData(policyDetailEvent, policyDetailJson);
-    		} catch(ObjectNotFoundException e) {
+    		} catch(Exception e) {
     			//This means we are unable to find one of the insuree in the insuree list of Coverage. 
     			//So, skip that it for that insuree and continue with the remaining list.
-    			logger.warn(e.getMessage());
+				throw new InternalException("Exception parsing List InsureeDetails, Reason:" +e.getMessage());
+				//e.setMessage("Exception parsing List InsureeDetails at step" + step);
     		}
     	}
     }
 	
 
-	private List<InsureeIdAndOrgUnitPojo> getInsureesDetails(Coverage coverage) throws ObjectNotFoundException{
+	private List<InsureeIdAndOrgUnitPojo> getInsureesDetails(FHIRAsset contractAsset) throws ObjectNotFoundException{
     	List<InsureeIdAndOrgUnitPojo> insureesDetails = new ArrayList<>();
-    	String insureesString = getInsureesDetailString(coverage);
-    	String[] insurees = insureesString.split(";");
-    	
-    	for(String insuree : insurees) {
-    		String[] insureeIdAndOrgUnitSplit = insuree.split(":");
+    	List<FHIRContext> insurees= contractAsset.getContext();
+    	//String[] insurees = insureesString.split(";");
+    	if(insurees.size() == 0) throw  new ObjectNotFoundException("No Insuree Found as context in Asset");
+    	for(FHIRContext insuree : insurees) {
+    		String[] insureeIdAndOrgUnitSplit = insuree.getReference().getDisplay().split(":");
     		InsureeIdAndOrgUnitPojo insureeDetail = new InsureeIdAndOrgUnitPojo(insureeIdAndOrgUnitSplit[0], insureeIdAndOrgUnitSplit[1]);
     		insureesDetails.add(insureeDetail);
     	}
     	
     	return insureesDetails;
     }
-    
-    private String getInsureesDetailString(Coverage coverage) throws ObjectNotFoundException {
-    	List<ExtensionItem> extensions = coverage.getExtension();
+    /*
+    private String getInsureesDetailString(FHIRAsset contractAsset) throws ObjectNotFoundException {
+		List<FHIRReference> extensions = contractAsset.getContext();
+		
     	for(ExtensionItem extension : extensions) {
     		if(extension.getUrl().equals(ExtensionUrlUtil.INSUREE_URL)) {
     			return extension.getValueString();
     		}
     	}
     	throw new ObjectNotFoundException("No insuree extension found in coverage.");
-    }
+    }*/
 	
     private Event convertToEvent(String orgUnit, String teiId, String enrollmentId) {
     	Event event = new Event();

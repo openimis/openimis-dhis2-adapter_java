@@ -24,12 +24,19 @@ public class OrganisationUnitCacheService {
 	
 	public void save(List<OrganisationUnit> organisations) {
 		cache.clear();
-		
-		Map<String, String> entries = organisations.stream().filter(org -> (org.getCode()!=null)).collect(Collectors.toMap(
-										OrganisationUnit::getCode, OrganisationUnit::getId));
-		
-		cache.putAll(entries);
+		for (OrganisationUnit organisation : organisations) {
+            if(organisation.getCode() != null){
+            	cache.put(organisation.getCode(), organisation.getId());
+			}
+        }		
 	}
+
+	public void add(String Code, String Id) {
+		if(Code!= null){
+			cache.put(Code, Id);
+		}
+	}
+
 	
 	public String getByCode(String code) throws ObjectNotFoundException {
 		String output = cache.get(code);
@@ -38,5 +45,9 @@ public class OrganisationUnitCacheService {
 		} else {
 			throw new ObjectNotFoundException("No orgUnit found with code :" + code);
 		}
+	}
+
+	public String getByCodeSilent(String code){
+		return cache.get(code);
 	}
 }

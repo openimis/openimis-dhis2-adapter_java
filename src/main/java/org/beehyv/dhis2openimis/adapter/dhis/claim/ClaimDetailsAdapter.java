@@ -7,9 +7,9 @@ import org.beehyv.dhis2openimis.adapter.dhis.cache.data_element.DataElementCache
 import org.beehyv.dhis2openimis.adapter.dhis.cache.program.ProgramCache;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.DetailsJson;
 import org.beehyv.dhis2openimis.adapter.dhis.pojo.poster.DataValue;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.ExtensionItem;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.claim.Claim;
-import org.beehyv.dhis2openimis.adapter.openimis.pojo.claimResponse.ClaimResponse;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.ExtensionItem;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.claim.Claim;
+import org.beehyv.dhis2openimis.adapter.fhir.pojo.claimResponse.ClaimResponse;
 import org.beehyv.dhis2openimis.adapter.util.ExtensionUrlUtil;
 import org.beehyv.dhis2openimis.adapter.util.exception.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
